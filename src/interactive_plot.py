@@ -14,10 +14,14 @@ class InteractivePlot:
         self.my  = my/np.nanmax(my)*np.nanmax(y)
         self.filtername = filtername
 
-        self.cont_regions = [None, None]
+        self.cont_regions = []
+        self.mask_regions = []
+        self.current_mask = []
 
         self.fig, self.ax = plt.subplots()
         self.span = None
+        self.span_mask = [] ## This will contain the spans for the mask
+        self.nbmask = 0
 
         self.line, = self.ax.plot(self.x, self.y, label='Spectrum')
         self.line2, = self.ax.plot(self.mx, self.my, label=self.filtername)
@@ -45,17 +49,75 @@ class InteractivePlot:
             if len(self.cont_regions)==2:
                 print(self.cont_regions)
                 self.cont_regions = np.sort(self.cont_regions)
+                self.cont_regions.sort()
+                self.update_plot()
+        ## Allow to mask som regions
+        if event.key in ['m', 'M']:
+            if len(self.current_mask)==2:
+                self.current_mask = []
+            self.current_mask.append(event.xdata)
+            if len(self.current_mask)==2:
+                self.current_mask.sort()
+                self.mask_regions.append(self.current_mask)
+                print(self.mask_regions)
+                self.nbmask+=1
+                self.update_plot()
+        ## Allow deleting a masked region
+        if event.key in ['d', 'D']:
+            _xdata = event.xdata
+            if len(self.mask_regions)>0:
+                _mask_centers = [self.mask_regions[i][0] + (self.mask_regions[i][1]-self.mask_regions[i][0]) for i in range(len(self.mask_regions))]
+                _diff = np.abs(_mask_centers - _xdata)
+                _minpos = np.where(_diff==np.min(_diff))[0][0]
+                self.mask_regions.remove(self.mask_regions[_minpos])
+                self.nbmask-=1
+                print(self.mask_regions)
                 self.update_plot()
 
     def update_plot(self):
 
         # Update the span and redraw the plot
-        if self.cont_regions[0] is not None and self.cont_regions[1] is not None:
+        # if self.cont_regions[0] is not None and self.cont_regions[1] is not None:
+        if len(self.cont_regions)>0:
             xmin, xmax = self.cont_regions
             # Update the span limits
             if self.span is not None:
                 self.span.remove()  # Remove the old span
             self.span = self.ax.axvspan(xmin, xmax, color='gray', alpha=0.5)  # Add the updated span
+
+        # Update the span and redraw the plot
+        # if self.cont_regions[0] is not None and self.cont_regions[1] is not None:
+        # xmin, xmax = self.mask_regions
+        # Update the span limits
+        
+        ## Delete all of the previous spans:
+        if len(self.span_mask)>0:
+            # for i in range(len(self.span_mask)):
+            for _span in self.span_mask:
+                _span.remove()
+        ## Plot all of the new masks
+        self.span_mask = []
+        for i in range(self.nbmask):
+            xmin, xmax = self.mask_regions[i]
+            _span = self.ax.axvspan(xmin, xmax, color='red', alpha=0.5)
+            self.span_mask.append(_span)  # Add the updated span
+
+
+
+        # if len(self.mask_regions)>0:
+        #     if len(self.span_mask)>0:
+        #         for _span in self.span_mask:
+        #             _span.remove()  # Remove the old span
+        #         for i in range(len(self.mask_regions)):
+        #             xmin, xmax = self.mask_regions[i]
+        #             _span = self.ax.axvspan(xmin, xmax, color='red', alpha=0.5)
+        #             self.span_mask.append(_span)  # Add the updated span
+        #     elif len(self.mask_regions)==0:
+        #         if len(self.span_mask)>0:
+        #             for _span in self.span_mask:
+        #             # if self.span_mask is not None:
+        #                 _span.remove()  # Remove the old span
+        #                 # self.span_mask = None
 
         # Update the data and redraw the plot
         self.line.set_ydata(self.y)
@@ -69,4 +131,4 @@ class InteractivePlot:
         self.fig.canvas.flush_events()  # Process any pending events
 
     def return_continuum(self):
-        return self.cont_regions
+        return self.cont_regions, self.mask_regions

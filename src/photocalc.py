@@ -10,18 +10,22 @@ from . import tools as tools
 from scipy.interpolate import interp1d
 
 class photoCalc:
-    def __init__(self, filename=None, config_file=None):
+    def __init__(self, filename=None, config_file=None, rv=0):
+
+        ## Compute the doppler factor
+        self.dop = tools.doppler(rv)
+        print(rv)
 
         ## Initialization of attributes:
         self.data = {} ## Will contain the data from the observation
         self.data_filter = {} ## Will contain the data from the observation
-        self.read_file(filename)
         self.filters = {}
         
         ## Define paths (should be moved elsewhere if needed).
         self.paths = {'filters_path': 'filters/'}
 
         ## Initialize the filters
+        self.read_file(filename)
         self.ini_filters()
 
     def ini_filters(self):
@@ -39,7 +43,7 @@ class photoCalc:
     
     def read_file(self, filename):
         data = ascii.read(filename)
-        self.data['wave'] = data['col1'] 
+        self.data['wave'] = data['col1']*self.dop ## Apply the doppler factor
         self.data['flux'] = data['col2'] 
     
     def load_filter(self, filtername=None):
@@ -61,12 +65,19 @@ class photoCalc:
         # plt.plot(self.data['wave'], self.data['flux'])
         # plt.plot(self.data_filter['wave'], self.data_filter['flux']/np.max(self.data_filter['flux'])*np.nanmax(self.data['flux']))
         # plt.show()
-        xlims_cont = tools.run_interactive_plot(self.data, self.data_filter)
+        xlims_cont, mask_regions = tools.run_interactive_plot(self.data, self.data_filter)
         self.xlims_cont = xlims_cont
+        self.mask_regions = mask_regions
 
     def compute_photometry(self):
         '''Integrate and compute the photometry'''
-        idx = ~np.isnan(self.data['flux'])
+        ## Compute the mask:
+        mask = np.ones(len(self.data['flux']))
+        for _bounds in self.mask_regions:
+            idx = (self.data['wave']>_bounds[0]) & (self.data['wave']<_bounds[1])
+            mask[idx] = np.nan
+        ##
+        idx = ~np.isnan(self.data['flux']*mask)
         _flux = self.data['flux'][idx]
         _wave = self.data['wave'][idx]
         _transmision = self.data_filter['flux']
