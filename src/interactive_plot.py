@@ -26,6 +26,11 @@ class InteractivePlot:
         self.ax.set_title('Interactive continuum selection')
         self.ax.legend()
         
+        print('This is an INTERACTIVE plotting interface')
+        print('Press the `r\' key to register the x position')
+        print('Press the `r\' key a second time to define the continuum window')
+        print('Once the continuum is selected, press q to continue')
+
         # Connect the key press event
         self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
         plt.show()
