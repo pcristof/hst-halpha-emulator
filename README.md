@@ -1,3 +1,5 @@
+# Tool to compute relative excess in the F656N hubble filter to a user-provided continuum
+
 This program is designed to compute a RELATIVE photon count through 
 the H-alpha filter for a provided spectrum.
 
