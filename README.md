@@ -12,3 +12,8 @@ The filters must be ascii files ended with ".dat"
 To run the program, simply type:
 `python compute_photo.py filename`
 there is an example filename here example-data/29.rdb
+
+I now added an update to allow shifting the spectrum by a given RV (km/s)
+`python compute_photo.py filename --rv 100`
+or
+`python compute_photo.py filename -r 100`
