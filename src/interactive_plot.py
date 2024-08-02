@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from irap_tools import plot_config
+from . import plot_config
 
 class InteractivePlot:
     def __init__(self, x=None, y=None, mx=None, my=None, filtername="filter"):

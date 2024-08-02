@@ -5,7 +5,7 @@ from astropy.io import ascii
 import glob
 import matplotlib.pyplot as plt
 import numpy as np
-from irap_tools import plot_config
+from . import plot_config
 from . import tools as tools
 from scipy.interpolate import interp1d
 
