@@ -17,10 +17,11 @@ class InteractivePlot:
         self.cont_regions = [None, None]
 
         self.fig, self.ax = plt.subplots()
+        self.span = None
 
         self.line, = self.ax.plot(self.x, self.y, label='Spectrum')
         self.line2, = self.ax.plot(self.mx, self.my, label=self.filtername)
-        self.span = self.ax.axvspan(self.cont_regions[0], self.cont_regions[1], color='gray', alpha=0.5)
+        # self.span = self.ax.axvspan(self.cont_regions[0], self.cont_regions[1], color='gray', alpha=0.5)
         self.ax.set_xlabel('Wavelength')
         self.ax.set_ylabel('Flux')
         self.ax.set_title('Interactive continuum selection')
@@ -52,7 +53,8 @@ class InteractivePlot:
         if self.cont_regions[0] is not None and self.cont_regions[1] is not None:
             xmin, xmax = self.cont_regions
             # Update the span limits
-            self.span.remove()  # Remove the old span
+            if self.span is not None:
+                self.span.remove()  # Remove the old span
             self.span = self.ax.axvspan(xmin, xmax, color='gray', alpha=0.5)  # Add the updated span
 
         # Update the data and redraw the plot
