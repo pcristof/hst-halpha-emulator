@@ -5,11 +5,13 @@ from scipy import constants as cst
 import numpy as np
 # InteractivePlot
 
-def run_interactive_plot(data, data_filter):
+def run_interactive_plot(data, data_filter, cont_regions=None, mask_regions=None, time=None, verbose=2):
     '''Launches the interactive plot with the spectrum and the filter'''
     xlims_cont = [None, None]
     while (None in xlims_cont) | (len(xlims_cont)<2):
-        IP = interactive.InteractivePlot(data['wave'], data['flux'], data_filter['wave'], data_filter['flux'])
+        IP = interactive.InteractivePlot(data['wave'], data['flux'], data_filter['wave'], data_filter['flux'],
+                                         cont_regions=cont_regions, mask_regions=mask_regions,
+                                         time=time, verbose=verbose)
         xlims_cont, mask_regions = IP.return_continuum()
         if (None in xlims_cont) | (len(xlims_cont)<2):
             print('You have not selected the continuum')

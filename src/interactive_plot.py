@@ -3,8 +3,12 @@ import numpy as np
 from . import plot_config
 
 class InteractivePlot:
-    def __init__(self, x=None, y=None, mx=None, my=None, filtername="filter"):
+    def __init__(self, x=None, y=None, mx=None, my=None, filtername="filter",
+                 cont_regions=None, mask_regions=None, time=None, verbose=2):
 
+
+        self.nbmask = 0
+        self.time = time
         self.x  = x
         self.y  = y
         if (x is None) or (y is None):
@@ -14,14 +18,23 @@ class InteractivePlot:
         self.my  = my/np.nanmax(my)*np.nanmax(y)
         self.filtername = filtername
 
-        self.cont_regions = []
-        self.mask_regions = []
+        if cont_regions is None:
+            self.cont_regions = []
+        else:
+            self.cont_regions = cont_regions
+        if mask_regions is None:
+            self.mask_regions = []
+        else:
+            self.mask_regions = mask_regions
+            self.nbmask = len(self.mask_regions)
+
+        self.verbose = verbose
+
         self.current_mask = []
 
         self.fig, self.ax = plt.subplots()
         self.span = None
         self.span_mask = [] ## This will contain the spans for the mask
-        self.nbmask = 0
 
         self.line, = self.ax.plot(self.x, self.y, label='Spectrum')
         self.line2, = self.ax.plot(self.mx, self.my, label=self.filtername)
@@ -31,14 +44,21 @@ class InteractivePlot:
         self.ax.set_title('Interactive continuum selection')
         self.ax.legend()
         
-        print('This is an INTERACTIVE plotting interface')
-        print('Press the `r\' key to register the x position')
-        print('Press the `r\' key a second time to define the continuum window')
-        print('Once the continuum is selected, press q to continue')
+        if self.verbose>2:
+            print('This is an INTERACTIVE plotting interface')
+            print('Press the `r\' key to register the x position')
+            print('Press the `r\' key a second time to define the continuum window')
+            print('Once the continuum is selected, press q to continue')
 
         # Connect the key press event
         self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
-        plt.show()
+        self.update_plot()
+        if self.time is not None:
+            plt.show(block=False)
+            plt.pause(time)
+            plt.close()
+        else:
+            plt.show()
     
     def on_key_press(self, event):
         # Handle key presses
@@ -47,7 +67,8 @@ class InteractivePlot:
                 self.cont_regions = []
             self.cont_regions.append(event.xdata)
             if len(self.cont_regions)==2:
-                print(self.cont_regions)
+                if self.verbose>3:
+                    print(self.cont_regions)
                 self.cont_regions = np.sort(self.cont_regions)
                 self.cont_regions.sort()
                 self.update_plot()
@@ -59,7 +80,8 @@ class InteractivePlot:
             if len(self.current_mask)==2:
                 self.current_mask.sort()
                 self.mask_regions.append(self.current_mask)
-                print(self.mask_regions)
+                if self.verbose>3:
+                    print(self.mask_regions)
                 self.nbmask+=1
                 self.update_plot()
         ## Allow deleting a masked region
@@ -71,7 +93,8 @@ class InteractivePlot:
                 _minpos = np.where(_diff==np.min(_diff))[0][0]
                 self.mask_regions.remove(self.mask_regions[_minpos])
                 self.nbmask-=1
-                print(self.mask_regions)
+                if self.verbose>3:
+                    print(self.mask_regions)
                 self.update_plot()
 
     def update_plot(self):
